@@ -65,98 +65,87 @@
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4lZGNaNs_HkPkKBzHSiCBGpLYsSpT4EquNvvaGwj2KVURkmqZusaydRExi88lUr0w/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypeDzdx6Hgs9R8PAaAN34euSD-u0V5GVI0aLvbHdBPdZPIQLtSGITCNBgUMr1Ml3YM/exec"; 
+    let studentDatabase = []; 
     let selectedColor = "";
     let currentStudent = null;
-    let searchTimer; // Timer for debouncing
+
+    // 1. Fetch data immediately when the page loads
+    window.onload = async () => {
+        try {
+            const response = await fetch(`${SCRIPT_URL}?get=all`);
+            studentDatabase = await response.json();
+            console.log("Database loaded locally!");
+        } catch (e) {
+            console.error("Could not preload student list");
+        }
+    };
 
     function selectColor(color) {
         selectedColor = color;
         document.getElementById('page-color').classList.add('hidden');
         document.getElementById('page-entry').classList.remove('hidden');
         document.getElementById('form-title').innerText = `${color} Team Entry`;
-        document.getElementById('form-title').style.color = color === 'Yellow' ? '#b8b800' : color;
     }
 
-    // This waits for the user to stop typing (Fast & Efficient)
+    // 2. SEARCH IS NOW INSTANT (No Fetching!)
     function lookupStudent() {
-        clearTimeout(searchTimer);
         const id = document.getElementById('student-id').value;
         const preview = document.getElementById('preview-name');
 
         if (id.length < 3) {
-            preview.innerText = "Enter at least 3 digits...";
+            preview.innerText = "Enter ID...";
             return;
         }
 
-        preview.innerText = "Searching...";
-        
-        // Wait 500ms after last keystroke before calling Google
-        searchTimer = setTimeout(async () => {
-            try {
-                const response = await fetch(`${SCRIPT_URL}?id=${id}`);
-                const data = await response.json();
-                
-                if (data.status === "success") {
-                    currentStudent = data;
-                    preview.innerHTML = `<span style="color:green">✔ Found:</span> <strong>${data.name}</strong> (Grade ${data.grade})`;
-                } else {
-                    currentStudent = null;
-                    preview.innerHTML = `<span style="color:red">✘ Student not found in MasterList</span>`;
-                }
-            } catch (e) {
-                preview.innerText = "Connection error. Check script URL.";
-            }
-        }, 500); 
+        // Search the local array instead of calling Google
+        // Assuming MasterList is [ID, Name, Grade]
+        const student = studentDatabase.find(row => row[0].toString() === id);
+
+        if (student) {
+            currentStudent = { name: student[1], grade: student[2] };
+            preview.innerHTML = `<span style="color:green">✔ Found:</span> <strong>${student[1]}</strong> (Grade ${student[2]})`;
+        } else {
+            currentStudent = null;
+            preview.innerHTML = `<span style="color:red">✘ Not found</span>`;
+        }
     }
 
     async function submitData() {
-        if (!currentStudent) {
-            alert("Please enter a valid Student ID first!");
-            return;
-        }
+        if (!currentStudent) return alert("Invalid Student");
         
         const btn = document.getElementById('submit-btn');
         const status = document.getElementById('status');
-        const sport = document.getElementById('sport-name').value;
         
         btn.disabled = true;
-        btn.innerText = "Saving...";
+        status.innerText = "Saving...";
 
         const payload = {
             id: document.getElementById('student-id').value,
             name: currentStudent.name,
             grade: currentStudent.grade,
-            sport: sport,
+            sport: document.getElementById('sport-name').value,
             color: selectedColor
         };
 
         try {
-            // Using "no-cors" can sometimes hide errors, 
-            // but your Google Script handles the response now.
+            // We still use POST to save to the sheet
             await fetch(SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors", 
-                cache: "no-cache",
+                mode: "no-cors",
                 body: JSON.stringify(payload)
             });
 
-            // SUCCESS LOGIC
-            status.innerHTML = `<span style="color:green">✅ Saved to ${sport} - ${selectedColor}!</span>`;
-            
-            // CLEAR FORM ONLY (Keep the color/page)
+            status.innerHTML = `<span style="color:green">✅ Saved!</span>`;
             document.getElementById('student-id').value = "";
-            document.getElementById('preview-name').innerText = "Waiting for next Student ID...";
+            document.getElementById('preview-name').innerText = "Waiting...";
             currentStudent = null;
             
-            // Clear success message after 3 seconds
-            setTimeout(() => { status.innerText = ""; }, 3000);
-
+            setTimeout(() => { status.innerText = ""; }, 2000);
         } catch (e) {
-            status.innerHTML = `<span style="color:red">❌ Error saving. Check Internet.</span>`;
+            status.innerText = "Error saving.";
         }
         btn.disabled = false;
-        btn.innerText = "Save Data";
     }
 </script>
 
