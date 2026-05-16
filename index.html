@@ -1,149 +1,177 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Sports Entry</title>
+    <title>ระบบบันทึกข้อมูลกีฬาสี</title>
     <style>
         :root {
             --red: #ff4d4d; --blue: #4d94ff;
             --green: #4dff88; --yellow: #ffff4d;
         }
-        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding: 20px; background: #f0f2f5; }
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
         .hidden { display: none; }
         
-        /* Color Selection Grid */
+        /* ตารางปุ่มเลือกสี */
         .color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .btn-color { border: none; height: 100px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: transform 0.2s; }
+        .btn-color { border: none; height: 100px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: transform 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn-color:hover { transform: scale(1.05); }
-        .red { background: var(--red); } .blue { background: var(--blue); }
-        .green { background: var(--green); } .yellow { background: var(--yellow); }
+        .red { background: var(--red); color: white; } 
+        .blue { background: var(--blue); color: white; }
+        .green { background: var(--green); color: #004d1a; } 
+        .yellow { background: var(--yellow); color: #4d4d00; }
 
-        /* Form Styling */
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        button#submit-btn { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1rem; }
-        #status { margin-top: 10px; font-weight: bold; text-align: center; }
-        .student-preview { background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 10px; min-height: 20px; }
+        /* การจัดรูปแบบฟอร์ม */
+        label { font-weight: bold; display: block; margin-top: 15px; color: #333; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        button#submit-btn { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1rem; margin-top: 15px; font-weight: bold; }
+        button#submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+        #status { margin-top: 15px; font-weight: bold; text-align: center; font-size: 1.1rem; }
+        .student-preview { background: #e9ecef; padding: 12px; border-radius: 6px; margin-bottom: 10px; min-height: 40px; border-left: 5px solid #6c757d; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div id="page-color">
-        <h2 style="text-align: center;">Select Your Team Color</h2>
+        <h2 style="text-align: center; margin-bottom: 5px;">ยินดีต้อนรับ</h2>
+        <p style="text-align: center; color: #666; margin-top: 0;">กรุณาเลือกสีคณะของคุณก่อนกรอกข้อมูล</p>
         <div class="color-grid">
-            <button class="btn-color red" onclick="selectColor('Red')">RED</button>
-            <button class="btn-color blue" onclick="selectColor('Blue')">BLUE</button>
-            <button class="btn-color green" onclick="selectColor('Green')">GREEN</button>
-            <button class="btn-color yellow" onclick="selectColor('Yellow')">YELLOW</button>
+            <button class="btn-color red" onclick="selectColor('Red')">สีแดง</button>
+            <button class="btn-color blue" onclick="selectColor('Blue')">สีน้ำเงิน</button>
+            <button class="btn-color green" onclick="selectColor('Green')">สีเขียว</button>
+            <button class="btn-color yellow" onclick="selectColor('Yellow')">สีเหลือง</button>
         </div>
     </div>
 
     <div id="page-entry" class="hidden">
-        <button onclick="location.reload()" style="background:none; border:none; color:blue; cursor:pointer; padding:0;"><- Back</button>
-        <h2 id="form-title">Key In Data</h2>
+        <button onclick="location.reload()" style="background:none; border:none; color:#007bff; cursor:pointer; padding:0; font-size: 1rem;">← เปลี่ยนสีคณะ</button>
+        <h2 id="form-title" style="margin-top: 10px;">บันทึกข้อมูล</h2>
         
-        <label>Student Number</label>
-        <input type="number" id="student-id" placeholder="Ex: 12345" oninput="lookupStudent()">
+        <label>เลขประจำตัวนักเรียน</label>
+        <input type="number" id="student-id" placeholder="พิมพ์เลขประจำตัวที่นี่..." oninput="lookupStudent()">
         
-        <div class="student-preview" id="preview-name">Waiting for Student ID...</div>
+        <label>ข้อมูลนักเรียนที่พบ</label>
+        <div class="student-preview" id="preview-name">กรุณาพิมพ์เลขประจำตัวนักเรียน...</div>
 
-        <label>Sport</label>
+        <label>ชนิดกีฬา</label>
         <select id="sport-name">
-            <option value="FootBall">FootBall</option>
-            <option value="BasketBall">BasketBall</option>
-            <option value="Badminton">Badminton</option>
-            <option value="PingPong">PingPong</option>
-            <option value="Chairball">Chairball</option>
-            <option value="Volleyball">Volleyball</option>
+            <option value="FootBall">ฟุตบอล (FootBall)</option>
+            <option value="BasketBall">บาสเกตบอล (BasketBall)</option>
+            <option value="Badminton">แบดมินตัน (Badminton)</option>
+            <option value="PingPong">ปิงปอง (PingPong)</option>
+            <option value="Chairball">แชร์บอล (Chairball)</option>
+            <option value="Volleyball">วอลเลย์บอล (Volleyball)</option>
         </select>
 
-        <button id="submit-btn" onclick="submitData()">Save Data</button>
+        <button id="submit-btn" onclick="submitData()">บันทึกข้อมูล</button>
         <div id="status"></div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypeDzdx6Hgs9R8PAaAN34euSD-u0V5GVI0aLvbHdBPdZPIQLtSGITCNBgUMr1Ml3YM/exec"; 
+    // ⚠️ นำ URL ที่ได้จากการ Deploy ใน Google Sheets มาวางตรงนี้
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBaOO4owxILhxrYf5vEZ9grptW9xQ_tH4e-IRQtUcJqtewAs6YBhzSeETBs-wr7w/exec"; 
+    
     let studentDatabase = []; 
     let selectedColor = "";
     let currentStudent = null;
 
-    // 1. Fetch data immediately when the page loads
+    // ดาวน์โหลดข้อมูลนักเรียนทั้งหมดมาเก็บไว้ในเว็บทันทีเพื่อความรวดเร็วในการค้นหา
     window.onload = async () => {
         try {
             const response = await fetch(`${SCRIPT_URL}?get=all`);
             studentDatabase = await response.json();
-            console.log("Database loaded locally!");
+            console.log("โหลดฐานข้อมูลนักเรียนสำเร็จ!");
         } catch (e) {
-            console.error("Could not preload student list");
+            console.error("ไม่สามารถโหลดข้อมูลนักเรียนได้");
         }
     };
 
     function selectColor(color) {
         selectedColor = color;
+        const thColors = { 'Red': 'สีแดง', 'Blue': 'สีน้ำเงิน', 'Green': 'สีเขียว', 'Yellow': 'สีเหลือง' };
         document.getElementById('page-color').classList.add('hidden');
         document.getElementById('page-entry').classList.remove('hidden');
-        document.getElementById('form-title').innerText = `${color} Team Entry`;
+        
+        const title = document.getElementById('form-title');
+        title.innerText = `บันทึกข้อมูลคอนทราสต์ - ${thColors[color]}`;
+        title.style.color = color === 'Yellow' ? '#b8b800' : (color === 'Green' ? '#00802b' : color);
     }
 
-    // 2. SEARCH IS NOW INSTANT (No Fetching!)
+    // ฟังก์ชันค้นหาข้อมูลแบบทันที (Instant Search)
     function lookupStudent() {
         const id = document.getElementById('student-id').value;
         const preview = document.getElementById('preview-name');
 
         if (id.length < 3) {
-            preview.innerText = "Enter ID...";
+            preview.innerHTML = "<span style='color:#666;'>กำลังรอเลขประจำตัว...</span>";
+            currentStudent = null;
             return;
         }
 
-        // Search the local array instead of calling Google
-        // Assuming MasterList is [ID, Name, Grade]
+        // ค้นหาใน Array ในหน่วยความจำของบราวเซอร์ (เร็ว 0.1 วินาที)
+        // โครงสร้างคอลัมน์ในฐานข้อมูล MasterList: [0] ID, [1] Name, [2] Grade, [3] Level (J/S)
         const student = studentDatabase.find(row => row[0].toString() === id);
 
         if (student) {
-            currentStudent = { name: student[1], grade: student[2] };
-            preview.innerHTML = `<span style="color:green">✔ Found:</span> <strong>${student[1]}</strong> (Grade ${student[2]})`;
+            const levelText = student[3] && student[3].toUpperCase() === 'J' ? 'ม.ต้น' : 'ม.ปลาย';
+            currentStudent = { 
+                name: student[1], 
+                grade: student[2],
+                level: student[3] || 'J' // ส่งตัว J หรือ S กลับไปที่ Script
+            };
+            preview.innerHTML = `<span style="color:green; font-weight:bold;">✔ พบข้อมูล:</span><br>
+                                 <strong>ชื่อ:</strong> ${student[1]}<br>
+                                 <strong>ชั้น:</strong> ${student[2]} (${levelText})`;
         } else {
             currentStudent = null;
-            preview.innerHTML = `<span style="color:red">✘ Not found</span>`;
+            preview.innerHTML = `<span style="color:red; font-weight:bold;">✘ ไม่พบเลขประจำตัวนี้ในระบบ</span>`;
         }
     }
 
     async function submitData() {
-        if (!currentStudent) return alert("Invalid Student");
+        if (!currentStudent) {
+            alert("กรุณากรอกเลขประจำตัวนักเรียนให้ถูกต้องก่อนบันทึก!");
+            return;
+        }
         
         const btn = document.getElementById('submit-btn');
         const status = document.getElementById('status');
+        const sport = document.getElementById('sport-name').value;
         
         btn.disabled = true;
-        status.innerText = "Saving...";
+        status.innerHTML = "<span style='color:orange;'>กำลังบันทึกข้อมูล...</span>";
 
         const payload = {
             id: document.getElementById('student-id').value,
             name: currentStudent.name,
             grade: currentStudent.grade,
-            sport: document.getElementById('sport-name').value,
+            level: currentStudent.level, // ตัวแปร J หรือ S เพื่อนำไปแยกแท็บใน Google Apps Script
+            sport: sport,
             color: selectedColor
         };
 
         try {
-            // We still use POST to save to the sheet
             await fetch(SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
                 body: JSON.stringify(payload)
             });
 
-            status.innerHTML = `<span style="color:green">✅ Saved!</span>`;
+            // แสดงสถานะสำเร็จเป็นภาษาไทย
+            status.innerHTML = `<span style="color:green;">✅ บันทึกข้อมูลเรียบร้อยแล้ว!</span>`;
+            
+            // ล้างฟอร์มกรอกข้อมูลเพื่อรับคิวถัดไป (แต่ยังคงหน้าสีเดิมไว้)
             document.getElementById('student-id').value = "";
-            document.getElementById('preview-name').innerText = "Waiting...";
+            document.getElementById('preview-name').innerHTML = "<span style='color:#666;'>กรุณาพิมพ์เลขประจำตัวนักเรียนคนถัดไป...</span>";
             currentStudent = null;
             
-            setTimeout(() => { status.innerText = ""; }, 2000);
+            // ลบข้อความสำเร็จออกหลังจาก 3 วินาที
+            setTimeout(() => { status.innerText = ""; }, 3000);
         } catch (e) {
-            status.innerText = "Error saving.";
+            status.innerHTML = `<span style="color:red;">❌ เกิดข้อผิดพลาดในการเชื่อมต่ออินเทอร์เน็ต</span>`;
         }
         btn.disabled = false;
     }
