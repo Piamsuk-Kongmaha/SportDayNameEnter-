@@ -13,40 +13,36 @@
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
         .hidden { display: none; }
         
-        /* ตารางปุ่มเลือกสี */
-        .color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .btn-color { border: none; height: 100px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: transform 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn-color:hover { transform: scale(1.05); }
-        .red { background: var(--red); color: white; } 
-        .blue { background: var(--blue); color: white; }
-        .green { background: var(--green); color: #004d1a; } 
-        .yellow { background: var(--yellow); color: #4d4d00; }
-
-        /* การจัดรูปแบบฟอร์ม */
+        /* สไตล์หน้าล็อกอินด้วยรหัสผ่าน */
+        .login-container { text-align: center; }
+        
+        /* การจัดรูปแบบฟอร์มทั่วไป */
         label { font-weight: bold; display: block; margin-top: 15px; color: #333; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        
+        button.btn-primary { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: bold; margin-top: 10px; }
         button#submit-btn { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1rem; margin-top: 15px; font-weight: bold; }
         button#submit-btn:disabled { background: #ccc; cursor: not-allowed; }
-        #status { margin-top: 15px; font-weight: bold; text-align: center; font-size: 1.1rem; }
+        
+        #status, #login-error { margin-top: 15px; font-weight: bold; text-align: center; font-size: 1.1rem; }
+        #login-error { color: red; }
         .student-preview { background: #e9ecef; padding: 12px; border-radius: 6px; margin-bottom: 10px; min-height: 40px; border-left: 5px solid #6c757d; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="page-color">
-        <h2 style="text-align: center; margin-bottom: 5px;">ยินดีต้อนรับ</h2>
-        <p style="text-align: center; color: #666; margin-top: 0;">กรุณาเลือกสีคณะของคุณก่อนกรอกข้อมูล</p>
-        <div class="color-grid">
-            <button class="btn-color red" onclick="selectColor('Red')">สีแดง</button>
-            <button class="btn-color blue" onclick="selectColor('Blue')">สีน้ำเงิน</button>
-            <button class="btn-color green" onclick="selectColor('Green')">สีเขียว</button>
-            <button class="btn-color yellow" onclick="selectColor('Yellow')">สีเหลือง</button>
-        </div>
+    <div id="page-login" class="login-container">
+        <h2>เข้าสู่ระบบกีฬาสี</h2>
+        <p style="color: #666;">กรุณากรอกรหัสผ่านของสีคณะเพื่อเข้าสู่หน้ากรอกข้อมูล</p>
+        
+        <input type="password" id="color-password" placeholder="กรอกรหัสผ่านสีคณะที่นี่..." style="text-align: center;">
+        <button class="btn-primary" onclick="checkPassword()">เข้าสู่หน้ากรอกข้อมูล</button>
+        <div id="login-error"></div>
     </div>
 
     <div id="page-entry" class="hidden">
-        <button onclick="location.reload()" style="background:none; border:none; color:#007bff; cursor:pointer; padding:0; font-size: 1rem;">← เปลี่ยนสีคณะ</button>
+        <button onclick="location.reload()" style="background:none; border:none; color:#007bff; cursor:pointer; padding:0; font-size: 1rem;">← ออกจากระบบสี</button>
         <h2 id="form-title" style="margin-top: 10px;">บันทึกข้อมูล</h2>
         
         <label>เลขประจำตัวนักเรียน</label>
@@ -71,14 +67,19 @@
 </div>
 
 <script>
-    // ⚠️ นำ URL ที่ได้จากการ Deploy ใน Google Sheets มาวางตรงนี้
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBaOO4owxILhxrYf5vEZ9grptW9xQ_tH4e-IRQtUcJqtewAs6YBhzSeETBs-wr7w/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzdPUds4cp882xpCAXCCAlmmRrCTTb9Dy5S7jpCbsZhO3yixyORfL2MFiEdePW1ktl/exec"; 
     
+    const COLOR_PASSWORDS = {
+        'red123': { name: 'Red', thName: 'สีแดง' },
+        'blue123': { name: 'Blue', thName: 'สีน้ำเงิน' },
+        'green123': { name: 'Green', thName: 'สีเขียว' },
+        'yellow123': { name: 'Yellow', thName: 'สีเหลือง' }
+    };
+
     let studentDatabase = []; 
     let selectedColor = "";
     let currentStudent = null;
 
-    // ดาวน์โหลดข้อมูลนักเรียนทั้งหมดมาเก็บไว้ในเว็บทันทีเพื่อความรวดเร็วในการค้นหา
     window.onload = async () => {
         try {
             const response = await fetch(`${SCRIPT_URL}?get=all`);
@@ -89,18 +90,30 @@
         }
     };
 
-    function selectColor(color) {
-        selectedColor = color;
-        const thColors = { 'Red': 'สีแดง', 'Blue': 'สีน้ำเงิน', 'Green': 'สีเขียว', 'Yellow': 'สีเหลือง' };
-        document.getElementById('page-color').classList.add('hidden');
-        document.getElementById('page-entry').classList.remove('hidden');
+    // ฟังก์ชันตรวจสอบรหัสผ่านเพื่อเข้าหน้าสี
+    function checkPassword() {
+        const inputPass = document.getElementById('color-password').value.trim();
+        const errorDiv = document.getElementById('login-error');
         
-        const title = document.getElementById('form-title');
-        title.innerText = `บันทึกข้อมูลคอนทราสต์ - ${thColors[color]}`;
-        title.style.color = color === 'Yellow' ? '#b8b800' : (color === 'Green' ? '#00802b' : color);
+        if (COLOR_PASSWORDS[inputPass]) {
+            errorDiv.innerText = "";
+            selectedColor = COLOR_PASSWORDS[inputPass].name;
+            const thName = COLOR_PASSWORDS[inputPass].thName;
+            
+            // สลับหน้าจอ
+            document.getElementById('page-login').classList.add('hidden');
+            document.getElementById('page-entry').classList.remove('hidden');
+            
+            // เปลี่ยนหัวข้อและสีตามที่ล็อกอินเข้ามา
+            const title = document.getElementById('form-title');
+            title.innerText = `ฟอร์มบันทึกข้อมูล - ${thName}`;
+            title.style.color = selectedColor === 'Yellow' ? '#b8b800' : (selectedColor === 'Green' ? '#00802b' : selectedColor);
+        } else {
+            errorDiv.innerText = "❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง";
+        }
     }
 
-    // ฟังก์ชันค้นหาข้อมูลแบบทันที (Instant Search)
+    // ค้นหานักเรียนแบบเรียลไทม์
     function lookupStudent() {
         const id = document.getElementById('student-id').value;
         const preview = document.getElementById('preview-name');
@@ -111,8 +124,6 @@
             return;
         }
 
-        // ค้นหาใน Array ในหน่วยความจำของบราวเซอร์ (เร็ว 0.1 วินาที)
-        // โครงสร้างคอลัมน์ในฐานข้อมูล MasterList: [0] ID, [1] Name, [2] Grade, [3] Level (J/S)
         const student = studentDatabase.find(row => row[0].toString() === id);
 
         if (student) {
@@ -120,7 +131,7 @@
             currentStudent = { 
                 name: student[1], 
                 grade: student[2],
-                level: student[3] || 'J' // ส่งตัว J หรือ S กลับไปที่ Script
+                level: student[3] || 'J' 
             };
             preview.innerHTML = `<span style="color:green; font-weight:bold;">✔ พบข้อมูล:</span><br>
                                  <strong>ชื่อ:</strong> ${student[1]}<br>
@@ -148,7 +159,7 @@
             id: document.getElementById('student-id').value,
             name: currentStudent.name,
             grade: currentStudent.grade,
-            level: currentStudent.level, // ตัวแปร J หรือ S เพื่อนำไปแยกแท็บใน Google Apps Script
+            level: currentStudent.level, 
             sport: sport,
             color: selectedColor
         };
@@ -160,15 +171,13 @@
                 body: JSON.stringify(payload)
             });
 
-            // แสดงสถานะสำเร็จเป็นภาษาไทย
             status.innerHTML = `<span style="color:green;">✅ บันทึกข้อมูลเรียบร้อยแล้ว!</span>`;
             
-            // ล้างฟอร์มกรอกข้อมูลเพื่อรับคิวถัดไป (แต่ยังคงหน้าสีเดิมไว้)
+            // รีเซ็ตเฉพาะช่องกรอกข้อมูลนักเรียน (ยังคงล็อกอินอยู่ในหน้าสีเดิม)
             document.getElementById('student-id').value = "";
             document.getElementById('preview-name').innerHTML = "<span style='color:#666;'>กรุณาพิมพ์เลขประจำตัวนักเรียนคนถัดไป...</span>";
             currentStudent = null;
             
-            // ลบข้อความสำเร็จออกหลังจาก 3 วินาที
             setTimeout(() => { status.innerText = ""; }, 3000);
         } catch (e) {
             status.innerHTML = `<span style="color:red;">❌ เกิดข้อผิดพลาดในการเชื่อมต่ออินเทอร์เน็ต</span>`;
