@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRGrgRkA433Oav4HYFakfo4kmkjBN6oEH94TrhQWg-TUs7fZ1AV5ldmrkzTeQR-OA7/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpkCDGnqjjbQNR9GOMD7ZRfOvUD4n5g2hL1ZKRwhplatBApqn29w-1MQ8G8Zwgv6oA/exec"; 
 let studentDatabase = []; 
 let selectedColor = "";
 let currentStudent = null;
