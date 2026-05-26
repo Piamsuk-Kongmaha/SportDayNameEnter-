@@ -10,7 +10,8 @@
             --green: #4dff88; --yellow: #ffff4d;
         }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding: 20px; background: #f0f2f5; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; transition: max-width 0.3s; }
+        .card.wide { max-width: 800px; } /* ขยายขนาดการ์ดเมื่อแสดงแดชบอร์ด */
         .hidden { display: none; }
         
         /* สไตล์หน้าล็อกอินด้วยรหัสผ่าน */
@@ -27,11 +28,25 @@
         #status, #login-error { margin-top: 15px; font-weight: bold; text-align: center; font-size: 1.1rem; }
         #login-error { color: red; }
         .student-preview { background: #e9ecef; padding: 12px; border-radius: 6px; margin-bottom: 10px; min-height: 40px; border-left: 5px solid #6c757d; }
+
+        /* สไตล์ของ Dashboard */
+        .dashboard-container { margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 20px; }
+        .dashboard-title { font-size: 1.3rem; font-weight: bold; color: #444; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+        .dashboard-table th, .dashboard-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .dashboard-table th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+        .dashboard-table tr:nth-child(even) { background-color: #fdfdfd; }
+        .badge-level { padding: 3px 8px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .badge-j { background-color: #17a2b8; }
+        .badge-s { background-color: #6f42c1; }
+        .no-data { text-align: center; color: #888; padding: 20px; font-style: italic; }
+        .refresh-btn { background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        .refresh-btn:hover { background: #5a6268; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="main-card">
     <div id="page-login" class="login-container">
         <h2>เข้าสู่ระบบกีฬาสี</h2>
         <p style="color: #666;">กรุณากรอกรหัสผ่านของสีคณะเพื่อเข้าสู่หน้ากรอกข้อมูล</p>
@@ -65,6 +80,31 @@
 
         <button id="submit-btn" onclick="submitData()">บันทึกข้อมูล</button>
         <div id="status"></div>
+
+        <div class="dashboard-container">
+            <div class="dashboard-title">
+                <span>📊 รายชื่อนักกีฬาที่ลงทะเบียนแล้ว</span>
+                <button class="refresh-btn" onclick="refreshDashboard()">🔄 อัปเดตตาราง</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>ชนิดกีฬา</th>
+                            <th>ระดับ</th>
+                            <th>เลขประจำตัว</th>
+                            <th>ชื่อ - นามสกุล</th>
+                            <th>ชั้น</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-body">
+                        <tr>
+                            <td colspan="5" class="no-data">กำลังโหลดข้อมูลแดชบอร์ด...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 <script src="script.js"></script>
