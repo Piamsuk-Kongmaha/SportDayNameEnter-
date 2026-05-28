@@ -11,13 +11,10 @@
         }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding: 20px; background: #f0f2f5; }
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; transition: max-width 0.3s; }
-        .card.wide { max-width: 800px; } /* ขยายขนาดการ์ดเมื่อแสดงแดชบอร์ด */
+        .card.wide { max-width: 850px; }
         .hidden { display: none; }
         
-        /* สไตล์หน้าล็อกอินด้วยรหัสผ่าน */
         .login-container { text-align: center; }
-        
-        /* การจัดรูปแบบฟอร์มทั่วไป */
         label { font-weight: bold; display: block; margin-top: 15px; color: #333; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
         
@@ -29,7 +26,13 @@
         #login-error { color: red; }
         .student-preview { background: #e9ecef; padding: 12px; border-radius: 6px; margin-bottom: 10px; min-height: 40px; border-left: 5px solid #6c757d; }
 
-        /* สไตล์ของ Dashboard */
+        .admin-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        
+        /* สไตล์ช่องค้นหาบน Dashboard */
+        .search-container { background: #f8f9fa; border: 1px solid #e3e6f0; padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; display: block; }
+
+        /* แดชบอร์ด */
         .dashboard-container { margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 20px; }
         .dashboard-title { font-size: 1.3rem; font-weight: bold; color: #444; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
@@ -41,7 +44,10 @@
         .badge-s { background-color: #6f42c1; }
         .no-data { text-align: center; color: #888; padding: 20px; font-style: italic; }
         .refresh-btn { background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-        .refresh-btn:hover { background: #5a6268; }
+        
+        /* ปุ่มลบรายชื่อ */
+        .btn-delete { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+        .btn-delete:hover { background: #bd2130; }
     </style>
 </head>
 <body>
@@ -49,17 +55,28 @@
 <div class="card" id="main-card">
     <div id="page-login" class="login-container">
         <h2>เข้าสู่ระบบกีฬาสี</h2>
-        <p style="color: #666;">กรุณากรอกรหัสผ่านของสีคณะเพื่อเข้าสู่หน้ากรอกข้อมูล</p>
+        <p style="color: #666;">กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบข้อมูล</p>
         
-        <input type="password" id="color-password" placeholder="กรอกรหัสผ่านสีคณะที่นี่..." style="text-align: center;">
-        <button class="btn-primary" onclick="checkPassword()">เข้าสู่หน้ากรอกข้อมูล</button>
+        <input type="password" id="color-password" placeholder="กรอกรหัสผ่านที่นี่..." style="text-align: center;">
+        <button class="btn-primary" onclick="checkPassword()">เข้าสู่ระบบ</button>
         <div id="login-error"></div>
     </div>
 
     <div id="page-entry" class="hidden">
-        <button onclick="location.reload()" style="background:none; border:none; color:#007bff; cursor:pointer; padding:0; font-size: 1rem;">← ออกจากระบบสี</button>
+        <button onclick="location.reload()" style="background:none; border:none; color:#007bff; cursor:pointer; padding:0; font-size: 1rem;">← ออกจากระบบ</button>
         <h2 id="form-title" style="margin-top: 10px;">บันทึกข้อมูล</h2>
         
+        <div id="admin-color-selection" class="admin-box hidden">
+            <label style="margin-top:0; color:#856404;">👑 สิทธิ์แอดมิน: กรุณาเลือกสีที่ต้องการจัดการ</label>
+            <select id="admin-select-color" onchange="adminChangeColor()">
+                <option value="" disabled selected>-- เลือกสีคณะ --</option>
+                <option value="Red|สีแดง">สีแดง (Red)</option>
+                <option value="Blue|สีน้ำเงิน">สีน้ำเงิน (Blue)</option>
+                <option value="Green|สีเขียว">สีเขียว (Green)</option>
+                <option value="Yellow|สีเหลือง">สีเหลือง (Yellow)</option>
+            </select>
+        </div>
+
         <label>เลขประจำตัวนักเรียน</label>
         <input type="number" id="student-id" placeholder="พิมพ์เลขประจำตัวที่นี่..." oninput="lookupStudent()">
         
@@ -83,9 +100,14 @@
 
         <div class="dashboard-container">
             <div class="dashboard-title">
-                <span>📊 รายชื่อนักกีฬาที่ลงทะเบียนแล้ว</span>
+                <span id="dashboard-header">📊 รายชื่อนักกีฬา</span>
                 <button class="refresh-btn" onclick="refreshDashboard()">🔄 อัปเดตตาราง</button>
             </div>
+            
+            <div id="admin-search-box" class="search-container hidden">
+                <input type="text" id="dashboard-search" class="search-input" placeholder="🔍 ค้นหาด้วย เลขประจำตัว, ชื่อ หรือชนิดกีฬา..." oninput="filterDashboard()">
+            </div>
+
             <div style="overflow-x:auto;">
                 <table class="dashboard-table">
                     <thead>
@@ -95,11 +117,12 @@
                             <th>เลขประจำตัว</th>
                             <th>ชื่อ - นามสกุล</th>
                             <th>ชั้น</th>
+                            <th id="th-manage" class="hidden">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="dashboard-body">
                         <tr>
-                            <td colspan="5" class="no-data">กำลังโหลดข้อมูลแดชบอร์ด...</td>
+                            <td colspan="6" class="no-data">กรุณาเลือกสีคณะเพื่อดูแดชบอร์ด...</td>
                         </tr>
                     </tbody>
                 </table>
